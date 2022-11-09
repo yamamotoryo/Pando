@@ -642,5 +642,89 @@ plot_tf_network.SeuratPlus <- function(
     return(p)
 }
 
+#' Plot sub-network centered around one TF.
+#'
+#' @import tidygraph
+#' @import ggraph
+#'
+#' @param object An object.
+#' @param tf The transcription factor to center around.
+#' @param network Name of the network to use.
+#' @param graph Name of the graph.
+#' @param circular Logical. Layout tree in circular layout.
+#' @param edge_width Edge width.
+#' @param edge_color Edge color.
+#' @param node_size Node size.
+#' @param text_size Font size for labels.
+#' @param label_nodes String, indicating what to label.
+#' * \code{'tfs'} - Label all TFs.
+#' * \code{'all'} - Label all genes.
+#' * \code{'none'} - Label nothing (except the root TF).
+#' @param color_edges Logical, whether to color edges by direction.
+#'
+#' @return A SeuratPlus object.
+#'
+#' @rdname plot_tf_network
+#' @export
+#' @method plot_tf_network SeuratPlus
+my_plot_tf_network.SeuratPlus <- function(
+    object,
+    tf,
+    network = DefaultNetwork(object),
+    graph = 'module_graph',
+    circular = TRUE,
+    edge_width = 0.2,
+    edge_color = c('-1'='darkgrey', '1'='orange'),
+    node_size = 3,
+    text_size = 10,
+    label_nodes = c('tfs', 'all', 'none'),
+    color_edges = TRUE,
+    estimate_thres = NULL
+){
+    label_nodes <- match.arg(label_nodes)
+
+    gene_graph <- NetworkGraph(object, network=network, graph='tf_graphs')
+    gene_graph <- gene_graph[[tf]]
+    if (!is_null(estimate_thres)){
+        gene_graph <- to_subgraph(gene_graph, abs(estimate) > estimate_thres, subset_by = 'edges')$subgraph
+        }
+    p <- ggraph(gene_graph, layout='tree', circular=circular)
+
+    if (color_edges){
+        p <- p + geom_edge_diagonal(aes(color=factor(dir)), width=edge_width) +
+            scale_edge_color_manual(values=edge_color)
+    } else {
+        p <- p + geom_edge_diagonal(width=edge_width, color=edge_color[1])
+    }
+
+    p <- p + geom_node_point(
+        color='darkgrey', shape=21, fill='lightgrey', size=node_size, stroke=0.5
+    )
+
+    net_tfs <- colnames(NetworkTFs(object))
+    if (label_nodes=='tfs'){
+        p <- p + geom_node_label(
+            aes(label=name, filter=name%in%net_tfs),
+            size=text_size/ggplot2::.pt,
+            label.padding=unit(0.1, 'line')
+        )
+    } else if (label_nodes=='all'){
+        p <- p + geom_node_label(
+            aes(label=name),
+            size=text_size/ggplot2::.pt,
+            label.padding=unit(0.1, 'line')
+        )
+    } else {
+        p <- p + geom_node_label(
+            aes(label=name, filter=name==tf),
+            size=text_size/ggplot2::.pt,
+            label.padding=unit(0.1, 'line')
+        )
+    }
+    p <- p + scale_size_continuous(range=node_size) +
+        theme_void() + no_legend()
+
+    return(p)
+}
 
 
