@@ -603,7 +603,7 @@ plot_tf_network.SeuratPlus <- function(
 
     gene_graph <- NetworkGraph(object, network=network, graph='tf_graphs')
     gene_graph <- gene_graph[[tf]]
-    if (!is_null(estimate_thres)){
+    if (!is.null(estimate_thres)){
         gene_graph <- to_subgraph(gene_graph, abs(estimate) > estimate_thres, subset_by = 'edges')$subgraph
         }
 
@@ -689,7 +689,7 @@ my_plot_tf_network.SeuratPlus <- function(
 
     gene_graph <- NetworkGraph(object, network=network, graph='tf_graphs')
     gene_graph <- gene_graph[[tf]]
-    if (!is_null(estimate_thres)){
+    if (!is.null(estimate_thres)){
         gene_graph <- to_subgraph(gene_graph, abs(estimate) > estimate_thres, subset_by = 'edges')$subgraph
         }
     p <- ggraph(gene_graph, layout='tree', circular=circular)
