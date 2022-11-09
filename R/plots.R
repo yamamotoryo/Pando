@@ -596,12 +596,16 @@ plot_tf_network.SeuratPlus <- function(
     node_size = 3,
     text_size = 10,
     label_nodes = c('tfs', 'all', 'none'),
-    color_edges = TRUE
+    color_edges = TRUE,
+    estimate_thres = NULL
 ){
     label_nodes <- match.arg(label_nodes)
 
     gene_graph <- NetworkGraph(object, network=network, graph='tf_graphs')
     gene_graph <- gene_graph[[tf]]
+    if (!is_null(estimate_thres)){
+        gene_graph <- to_subgraph(gene_graph, abs(estimate) > estimate_thres, subset_by = 'edges')$subgraph
+        }
 
     p <- ggraph(gene_graph, layout='tree', circular=circular)
 
