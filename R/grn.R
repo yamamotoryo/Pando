@@ -610,7 +610,8 @@ find_modules.SeuratPlus <- function(
     p_thresh = 0.05,
     rsq_thresh = 0.1,
     nvar_thresh = 10,
-    min_genes_per_module = 5
+    min_genes_per_module = 5,
+    xgb_top = 50
 ){
     params <- Params(object)
     regions <- NetworkRegions(object)
@@ -620,7 +621,8 @@ find_modules.SeuratPlus <- function(
         p_thresh = p_thresh,
         rsq_thresh = rsq_thresh,
         nvar_thresh = nvar_thresh,
-        min_genes_per_module = min_genes_per_module
+        min_genes_per_module = min_genes_per_module,
+        xgb_top = xgb_top
     )
     modules <- NetworkModules(net_obj)
 
