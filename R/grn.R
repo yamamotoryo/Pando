@@ -428,7 +428,7 @@ format_coefs <- function(coefs, term=':', adjust_method='fdr'){
     term_pattern <- paste0('(.+)', term, '(.+)')
     region_pattern <- '[\\d\\w]+_\\d+_\\d+'
     coefs_use <- coefs %>%
-        filter(!term%in%c('(Intercept)', 'Intercept')) %>%
+        dplyr::filter(!term%in%c('(Intercept)', 'Intercept')) %>%
         mutate(
             tf_ = str_replace(term, term_pattern, '\\1'),
             region_ = str_replace(term, term_pattern, '\\2')
@@ -488,16 +488,16 @@ find_modules.Network <- function(
     }
 
     models_use <- gof(object) %>%
-        filter(rsq>rsq_thresh & nvariables>nvar_thresh) %>%
+        dplyr::filter(rsq>rsq_thresh & nvariables>nvar_thresh) %>%
         pull(target) %>%
         unique()
 
     modules <- coef(object) %>%
-        filter(target %in% models_use)
+        dplyr::filter(target %in% models_use)
 
     if (fit_method %in% c('cv.glmnet', 'glmnet')){
         modules <- modules %>%
-            filter(estimate != 0)
+            dplyr::filter(estimate != 0)
     } else if (fit_method == 'xgb'){
         modules <- modules %>%
             group_by_at(xgb_method) %>%
@@ -505,7 +505,7 @@ find_modules.Network <- function(
             mutate(estimate=sign(corr)*gain)
     } else {
         modules <- modules %>%
-            filter(ifelse(is.na(padj), T, padj<p_thresh))
+            dplyr::filter(ifelse(is.na(padj), T, padj<p_thresh))
     }
 
     modules <- modules %>%
@@ -549,26 +549,26 @@ find_modules.Network <- function(
         arrange(tf)
 
     module_pos <- modules %>%
-        filter(estimate>0) %>%
-        group_by(tf) %>% filter(n()>min_genes_per_module) %>%
+        dplyr::filter(estimate>0) %>%
+        group_by(tf) %>% dplyr::filter(n()>min_genes_per_module) %>%
         group_split() %>% {names(.) <- map_chr(., function(x) x$tf[[1]]); .} %>%
         map(function(x) x$target)
 
     module_neg <- modules %>%
-        filter(estimate<0) %>%
-        group_by(tf) %>% filter(n()>min_genes_per_module) %>%
+        dplyr::filter(estimate<0) %>%
+        group_by(tf) %>% dplyr::filter(n()>min_genes_per_module) %>%
         group_split() %>% {names(.) <- map_chr(., function(x) x$tf[[1]]); .} %>%
         map(function(x) x$target)
 
     regions_pos <- modules %>%
-        filter(estimate>0) %>%
-        group_by(tf) %>% filter(n()>min_genes_per_module) %>%
+        dplyr::filter(estimate>0) %>%
+        group_by(tf) %>% dplyr::filter(n()>min_genes_per_module) %>%
         group_split() %>% {names(.) <- map_chr(., function(x) x$tf[[1]]); .} %>%
         map(function(x) unlist(str_split(x$regions, ';')))
 
     regions_neg <- modules %>%
-        filter(estimate<0) %>%
-        group_by(tf) %>% filter(n()>min_genes_per_module) %>%
+        dplyr::filter(estimate<0) %>%
+        group_by(tf) %>% dplyr::filter(n()>min_genes_per_module) %>%
         group_split() %>% {names(.) <- map_chr(., function(x) x$tf[[1]]); .} %>%
         map(function(x) unlist(str_split(x$regions, ';')))
 
@@ -610,7 +610,8 @@ find_modules.SeuratPlus <- function(
     p_thresh = 0.05,
     rsq_thresh = 0.1,
     nvar_thresh = 10,
-    min_genes_per_module = 5
+    min_genes_per_module = 5,
+    xgb_top = 50
 ){
     params <- Params(object)
     regions <- NetworkRegions(object)
@@ -621,6 +622,7 @@ find_modules.SeuratPlus <- function(
         rsq_thresh = rsq_thresh,
         nvar_thresh = nvar_thresh,
         min_genes_per_module = min_genes_per_module
+        xgb_top = xgb_top
     )
     modules <- NetworkModules(net_obj)
 
